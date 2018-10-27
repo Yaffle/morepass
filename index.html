@@ -11,13 +11,15 @@
   html {
     font-size: 16px;
   }
-  input:invalid {
-    background: pink;
-  }
   input[type="text"],
   input[type="url"],
   input[type="number"],
   input[type="password"] {
+    border: 1px solid silver;
+    min-height: 2em;
+  }
+  input[type="button"],
+  input[type="submit"] {
     min-height: 2em;
   }
   form {
@@ -37,6 +39,16 @@
   }
   form > div {
     margin: 1em 0em;
+  }
+  input[type=submit],
+  input[type=button] {
+    align-self: flex-end;
+  }
+  input[type=checkbox] {
+    margin: 1em;
+  }
+  #result {
+    margin-bottom: 1em;
   }
 </style>
 
@@ -70,11 +82,6 @@ async function generatePassword(options) {
     punctuation: '!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
   };
 
-  const set = (options.lowercase ? 'abcdefghijklmnopqrstuvwxyz' : '') +
-              (options.lowercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '') +
-              (options.lowercase ? '0123456789' : '') +
-              (options.lowercase ? '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~' : '');
-
   const makeBigIntFromArrayBuffer = function (buffer) {
     let s = '';
     const bytes = new Uint8Array(derivedKey);
@@ -84,13 +91,40 @@ async function generatePassword(options) {
     return BigInt('0x' + s);
   };
 
+  let setOfCharacters = '';
+  let rulesLength = 0;
+  for (let setName of Object.keys(sets)) {
+    if (options[setName]) {
+      setOfCharacters += sets[setName];
+      rulesLength += 1;
+    }
+  }
+
   let n = makeBigIntFromArrayBuffer(derivedKey);
   let result = '';
-  const c = BigInt(set.length);
-  for (let i = 0; i < options.length; i += 1) {
-    const digit = Number(n % c);
-    n = n / c;
-    result += set.slice(digit, digit + 1);
+  const setLength = BigInt(setOfCharacters.length);
+  for (let i = 0; i < options.length - rulesLength; i += 1) {
+    const digit = Number(n % setLength);
+    n /= setLength;
+    result += setOfCharacters.slice(digit, digit + 1);
+  }
+
+  let result2 = '';
+  for (let setName of Object.keys(sets)) {
+    if (options[setName]) {
+      const set = sets[setName];
+      const setLength = BigInt(set.length);
+      const digit = Number(n % setLength);
+      n /= setLength;
+      result2 += set.slice(digit, digit + 1);
+    }
+  }
+
+  for (var i = 0; i < result2.length; i++) {
+    const x = BigInt(result.length);
+    const position = Number(n % x);
+    result = result.slice(0, position) + result2.slice(i, i + 1) + result.slice(position);
+    n /= x;
   }
 
   return result;
@@ -173,12 +207,15 @@ navigator.serviceWorker.register('service-worker.js', {
   </details>
   
   <input type="submit" value="Generate" />
-  <div>
-    <input type="password" id="result" autocomplete="off" readonly />
-    <input id="copy-button" type="button" value="Copy" />  
-    <span id="tmp" tabindex="0"></span>
-  </div>
+  
+  <label for="result">Result:</label>
+  <input type="password" id="result" autocomplete="off" readonly />
+  <input id="copy-button" type="button" value="Copy" />  
+  <span id="tmp" tabindex="0"></span>
+
 </form>
+
+It is a clone of <a href="https://lesspass.com/">lesspass.com</a>.
 
 </body>
 </html>
