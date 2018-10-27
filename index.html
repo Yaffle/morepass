@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+
+<style>
+  input:invalid {
+    background: pink;
+  }
+  input[type="text"],
+  input[type="url"],
+  input[type="number"],
+  input[type="password"] {
+    min-height: 2em;
+  }
+  form {
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+  }
+  form > label,
+  form > input {
+    display: block;
+  }
+  form > details {
+    margin: 1em 0em;
+  }
+  input[type="number"] {
+    width: 8ch;
+  }
+  form > div {
+    margin: 1em 0em;
+  }
+</style>
+
+<script>
+'use strict';
+
+async function generatePassword(options) {
+  // https://lesspass.com/
+  // https://github.com/lesspass/lesspass/blob/master/core/src/lesspass.js
+  // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey
+
+  const masterKey = new TextEncoder().encode(options.masterPassword);
+
+  const key = await window.crypto.subtle.importKey('raw', masterKey, {name: 'PBKDF2'}, false, ['deriveBits', 'deriveKey']);
+
+  const salt = new TextEncoder().encode(options.site + options.login + options.counter.toString(16));
+  const algo = {
+    name: 'PBKDF2',
+    salt: salt,
+    iterations: 100000,
+    hash: 'SHA-256'
+  };
+  const webKey = await window.crypto.subtle.deriveKey(algo, key, {name: 'AES-CTR', length: 256}, true, ['encrypt', 'decrypt']);
+
+  const derivedKey = await window.crypto.subtle.exportKey('raw', webKey);
+
+  const sets = {
+    lowercase: 'abcdefghijklmnopqrstuvwxyz',
+    uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    digits: '0123456789',
+    punctuation: '!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+  };
+
+  const set = (options.lowercase ? 'abcdefghijklmnopqrstuvwxyz' : '') +
+              (options.lowercase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '') +
+              (options.lowercase ? '0123456789' : '') +
+              (options.lowercase ? '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~' : '');
+
+  const makeBigIntFromArrayBuffer = function (buffer) {
+    let s = '';
+    const bytes = new Uint8Array(derivedKey);
+    for (let i = 0; i < bytes.length; i += 1) {
+      s += ('0' + bytes[i].toString(16)).slice(-2);
+    }
+    return BigInt('0x' + s);
+  };
+
+  let n = makeBigIntFromArrayBuffer(derivedKey);
+  let result = '';
+  const c = BigInt(set.length);
+  for (let i = 0; i < options.length; i += 1) {
+    const digit = Number(n % c);
+    n = n / c;
+    result += set.slice(digit, digit + 1);
+  }
+
+  return result;
+}
+
+document.addEventListener('DOMContentLoaded', function (event) {
+  document.getElementById('password-generation-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    const options = {
+      site: new URL(document.getElementById('site').value).hostname,
+      login: document.getElementById('login').value,
+      masterPassword: document.getElementById('masterPassword').value,
+      lowercase: document.getElementById('lowercase').checked,
+      uppercase: document.getElementById('uppercase').checked,
+      digits: document.getElementById('digits').checked,
+      punctuation: document.getElementById('punctuation').checked,
+      length: Number(document.getElementById('length').value),
+      counter: Number(document.getElementById('counter').value)
+    }
+    generatePassword(options).then(function (password) {
+      document.getElementById('result').value = password;
+      document.getElementById('result').select();
+    });
+  });
+  document.getElementById('copy-button').addEventListener('click', function (event) {
+    var tmp = document.getElementById('tmp');
+    tmp.textContent = document.getElementById('result').value;
+    tmp.focus();
+    var range = document.createRange();
+    range.selectNodeContents(tmp);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    var ok = 'no event';
+    function onCopy(event) {
+      ok = 'ok';
+    }
+    document.addEventListener('copy', onCopy);
+    try {
+      document.execCommand('copy');
+    } catch (error) {
+      ok = error.toString();
+    }
+    document.removeEventListener('copy', onCopy);
+    tmp.textContent = '';
+    window.getSelection().removeAllRanges();
+    alert(ok);
+  });
+});
+</script>
+<body>
+
+<form id="password-generation-form">
+  <label for="site">Site:</label>
+  <input id="site" type="url" required />
+
+  <label for="login">Login:</label>
+  <input id="login" type="text" required />
+
+  <label for="masterPassword">Master Password:</label>
+  <input id="masterPassword" type="password" required />
+
+  <details>
+    <summary>Advanced options</summary>
+    <div>
+      <label><input id="lowercase" type="checkbox" checked />a-z</label>
+      <label><input id="uppercase" type="checkbox" checked />A-Z</label>
+      <label><input id="digits" type="checkbox" checked />0-9</label>
+      <label><input id="punctuation" type="checkbox" checked />%!@</label>
+
+      <label for="length">Length:</label>
+      <input id="length" type="number" value="16" min="0" step="1" />
+      <label for="counter">Counter:</label>
+      <input id="counter" type="number" value="1" min="1" step="1" /></label>
+    </div>
+  </details>
+  
+  <input type="submit" value="Generate" />
+  <div>
+    <input type="password" id="result" readonly />
+    <input id="copy-button" type="button" value="Copy" />  
+    <span id="tmp" tabindex="0"></span>
+  </div>
+</form>
+
+</body>
+</html>
