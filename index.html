@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A password generator</title>
 
 <style>
+  html {
+    font-size: 16px;
+  }
   input:invalid {
     background: pink;
   }
@@ -133,6 +138,11 @@ document.addEventListener('DOMContentLoaded', function (event) {
     alert(ok);
   });
 });
+
+navigator.serviceWorker.register('service-worker.js', {
+  scope: './'
+});
+
 </script>
 <body>
 
@@ -144,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
   <input id="login" type="text" required />
 
   <label for="masterPassword">Master Password:</label>
-  <input id="masterPassword" type="password" required />
+  <input id="masterPassword" type="password" autocomplete="off" required />
 
   <details>
     <summary>Advanced options</summary>
