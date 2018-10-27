@@ -1,7 +1,7 @@
 // https://serviceworke.rs/strategy-network-or-cache_service-worker_doc.html
 'use strict';
 
-const CACHE_NAME = 'cache-2018-10-27T11:32:46.713Z';
+const CACHE_NAME = 'cache-2018-10-27T16:05:31.928Z';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(precache());
