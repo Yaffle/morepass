@@ -1,0 +1,18 @@
+{
+  "lang": "en",
+  "name": "morepass",
+  "short_name": "morepass",
+  "description": "A password generator",
+  "display": "standalone",
+  "start_url": "./",
+  "scope": "./",
+  "theme_color": "#2B5797",
+  "background_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "/imgs/launcher.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
