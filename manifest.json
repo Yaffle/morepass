@@ -10,7 +10,7 @@
   "background_color": "#FFFFFF",
   "icons": [
     {
-      "src": "/imgs/launcher.svg",
+      "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }
