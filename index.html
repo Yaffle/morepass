@@ -49,6 +49,8 @@
   }
   #result {
     margin-bottom: 1em;
+    border: 1px solid silver;
+    min-height: 2em;
   }
 </style>
 
@@ -131,6 +133,7 @@ async function generatePassword(options) {
 }
 
 document.addEventListener('DOMContentLoaded', function (event) {
+  var currentPassword = '';
   document.getElementById('password-generation-form').addEventListener('submit', function (event) {
     event.preventDefault();
     const options = {
@@ -145,13 +148,13 @@ document.addEventListener('DOMContentLoaded', function (event) {
       counter: Number(document.getElementById('counter').value)
     }
     generatePassword(options).then(function (password) {
-      document.getElementById('result').value = password;
-      document.getElementById('result').select();
+      currentPassword = password;
+      document.getElementById('result').textContent = document.getElementById('show').checked ? currentPassword : currentPassword.replace(/[\s\S]/g, '*');
     });
   });
   document.getElementById('copy-button').addEventListener('click', function (event) {
     var tmp = document.getElementById('tmp');
-    tmp.textContent = document.getElementById('result').value;
+    tmp.textContent = document.getElementById('result').textContent;
     tmp.focus();
     var range = document.createRange();
     range.selectNodeContents(tmp);
@@ -172,6 +175,9 @@ document.addEventListener('DOMContentLoaded', function (event) {
     window.getSelection().removeAllRanges();
     alert(ok);
   });
+  document.getElementById('show').addEventListener('change', function (event) {
+    document.getElementById('result').textContent = document.getElementById('show').checked ? currentPassword : currentPassword.replace(/[\s\S]/g, '*');
+  });
 });
 
 navigator.serviceWorker.register('service-worker.js', {
@@ -181,39 +187,44 @@ navigator.serviceWorker.register('service-worker.js', {
 </script>
 <body>
 
-<form id="password-generation-form">
-  <label for="site">Site:</label>
-  <input id="site" type="url" required />
+<div>
+  <form id="password-generation-form">
+    <label for="site">Site:</label>
+    <input id="site" type="url" placeholder="https://example.com" required />
 
-  <label for="login">Login:</label>
-  <input id="login" type="text" required />
+    <label for="login">Login:</label>
+    <input id="login" type="text" placeholder="user@example.com" required />
 
-  <label for="masterPassword">Master Password:</label>
-  <input id="masterPassword" type="password" autocomplete="off" required />
+    <label for="masterPassword">Master Password:</label>
+    <input id="masterPassword" type="password" placeholder="password" autocomplete="off" required />
 
-  <details>
-    <summary>Advanced options</summary>
-    <div>
-      <label><input id="lowercase" type="checkbox" checked />a-z</label>
-      <label><input id="uppercase" type="checkbox" checked />A-Z</label>
-      <label><input id="digits" type="checkbox" checked />0-9</label>
-      <label><input id="punctuation" type="checkbox" checked />%!@</label>
+    <details>
+      <summary>Advanced options</summary>
+      <div>
+        <label><input id="lowercase" type="checkbox" checked />a-z</label>
+        <label><input id="uppercase" type="checkbox" checked />A-Z</label>
+        <label><input id="digits" type="checkbox" checked />0-9</label>
+        <label><input id="punctuation" type="checkbox" checked />%!@</label>
 
-      <label for="length">Length:</label>
-      <input id="length" type="number" value="16" min="0" step="1" />
-      <label for="counter">Counter:</label>
-      <input id="counter" type="number" value="1" min="1" step="1" /></label>
-    </div>
-  </details>
-  
-  <input type="submit" value="Generate" />
-  
-  <label for="result">Result:</label>
-  <input type="password" id="result" autocomplete="off" readonly />
-  <input id="copy-button" type="button" value="Copy" />  
-  <span id="tmp" tabindex="0"></span>
-
-</form>
+        <label for="length">Length:</label>
+        <input id="length" type="number" value="16" min="0" step="1" />
+        <label for="counter">Counter:</label>
+        <input id="counter" type="number" value="1" min="1" step="1" /></label>
+      </div>
+    </details>
+    
+    <input type="submit" value="Generate" />
+  </form>
+</div>
+<div>
+  <form>
+    <div>Result:</div>
+    <div id="result"></div>
+    <input id="copy-button" type="button" value="Copy" />
+    <div><label><input type="checkbox" id="show" checked />Show</label></div>
+    <span id="tmp" tabindex="0"></span>
+  </form>
+</div>
 
 It is a clone of <a href="https://lesspass.com/">lesspass.com</a>.
 
