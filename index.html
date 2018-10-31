@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
   });
   document.getElementById('show').addEventListener('change', function (event) {
     document.getElementById('result').textContent = document.getElementById('show').checked ? currentPassword : currentPassword.replace(/[\s\S]/g, '*');
+    document.getElementById('masterPassword').type = document.getElementById('show').checked ? 'text' : 'password';
   });
 });
 
@@ -190,13 +191,13 @@ navigator.serviceWorker.register('service-worker.js', {
 <div>
   <form id="password-generation-form">
     <label for="site">Site:</label>
-    <input id="site" type="text" placeholder="example.com|company" title="Two right-most labels of the domain or the company name" required />
+    <input id="site" type="text" placeholder="example.com|company" title="Two right-most labels of the domain or the company name" autocapitalize="off" required />
 
     <label for="login">Login:</label>
-    <input id="login" type="text" placeholder="username@example.com|username" title="The email address or login" required />
+    <input id="login" type="text" placeholder="username@example.com|username" title="The email address or login" autocapitalize="off" required />
 
     <label for="masterPassword">Master Password:</label>
-    <input id="masterPassword" type="password" placeholder="password" autocomplete="off" required />
+    <input id="masterPassword" type="password" placeholder="password" autocapitalize="off" autocomplete="off" required />
 
     <details>
       <summary>Advanced options</summary>
